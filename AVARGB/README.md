@@ -1,5 +1,5 @@
 Name of the program: AVARGB.m
-Title of manuscript:An open-source Matlab code package for seismic data automatic velocity analysis based on RGB space mapping 
+Title of manuscript:Automatic velocity analysis of seismic data containing multiples based on RGB space mapping 
 Author name: Junming Zhang
 Affiliation:  Jilin University, China
 Address:  Jilin University, People’s Republic of China, China.
