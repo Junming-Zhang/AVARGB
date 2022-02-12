@@ -1,4 +1,4 @@
- function [shape,pl2,pickpoint] = Pick(v1,RGB,fR11,dt,vmin,dv,limit,pl,pv,pa)
+ function [shape,pl2,pickpoint] = Pick(v1,RGB,fR11,dt,vmin,dv,w,limit,pl,pv,pa)
  % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function used for picking primary energy groups
 % Code by:  Junming Zhang, Bin Hu, Deli Wang and Xiangbo Gong 
@@ -13,33 +13,61 @@
 % pl:Upper limit of predictability pickup
 % pv:Upper limit of velocity pickup
 % pa:Upper limit of amplitude pickup
+
 pickpoint=fR11;
 R=RGB(:,:,1);
 G=RGB(:,:,2);
 B=RGB(:,:,3);
- pickpoint(:,3)=pickpoint(:,4).*5+pickpoint(:,5).*2+pickpoint(:,6)*2;
- pickpoint=sortrows(pickpoint,3);
-[Lpickpoint,Wpickpoint]=find(pickpoint(:,1)==0);
-pickpoint(Lpickpoint,:)=[];
-cpoint=pickpoint(:,3);
-cpoint1=gradient(cpoint,1);
-[Lcpoint1,Wcpoint1]=size(cpoint1);
-cpoint2=cpoint1(1:floor(Lcpoint1/2));
-maxnumber=max(cpoint);
-[aa,Num]=max(cpoint2);
-choosenumber=maxnumber-cpoint(Num);
-tpickpoint=pickpoint;
-[Ltpickpoint,Wpickpoint]=size(tpickpoint);
-for itpickpoint=1:Ltpickpoint
-    if maxnumber-tpickpoint(itpickpoint,3)<choosenumber
-        tpickpoint(itpickpoint,:)=0;
-    end
-end
-[Ltpickpoint,Wpickpoint]=find(tpickpoint(:,1)==0);
-tpickpoint(Ltpickpoint,:)=[];
-tpickpoint=sortrows(tpickpoint,1);
-[Ltpickpoint,Wtpickpoint]=size(tpickpoint);
 
+[Lpickpoint,Wpickpoint]=find(pickpoint(:,1)==0);
+pickpoint(Lpickpoint,:)=[]; 
+[n,m]=size(pickpoint);
+
+z=pickpoint(:,4:6);
+for i=1:3
+z = z./ repmat(sum(z.*z) .^ 0.5, n, 1);
+end
+dp=(z - repmat(max(z),n,1)) .^ 2;
+dn=(z - repmat(min(z),n,1)) .^ 2;
+for i=1:3
+    dp(:,i)=dp(:,i).*w(:,i);
+    dn(:,i)=dn(:,i).*w(:,i);
+end
+D_P = sum(dp,2) .^ 0.5; % D+ 与最大值的距离向量
+D_N = sum(dn,2) .^ 0.5; % D- 与最小值的距离向量
+S = D_N ./ (D_P+D_N); % 未归一化的得分
+testpickpoint=[pickpoint,S];
+testpickpoint=sortrows(testpickpoint,7);
+
+shout=testpickpoint(:,7); 
+shout=triangle(2,1,n,shout);
+  shout2=gradient(shout);
+    cure=gradient(shout2);
+  
+ turn=1;
+ 
+ for ifo=2:length(cure)-1
+     if cure(ifo-1)>0&&cure(ifo)<0&&ifo>4
+         pick(turn,:)=testpickpoint(ifo,:);
+         picknum(turn,1)=ifo;
+         turn=turn+1;
+     end
+ end
+ 
+% for ifo=8
+%       pick(turn,:)=testpickpoint(ifo,:);
+%           picknum(turn,1)=ifo;
+%            turn=turn+1;
+% end
+
+pickselect=[picknum,pick];
+pickselect=sortrows(pickselect,8);
+finalnum=pickselect(1,1);
+tpickpoint=testpickpoint(1:finalnum,:);
+
+
+
+[Ltpickpoint,Wtpickpoint]=size(tpickpoint);
 %% useing selection limit of each feature to constrain the primary pickup 
 
 if strcmp(limit,'Y')
@@ -74,7 +102,7 @@ ffpickpoint=ttpickpoint;
            TWmax=tpickpoint(tpickpoint1,1)+0.15/dt;
       for tpickpoint2=1:CLtpickpoint        
        if tpickpoint(tpickpoint2,1)>TWmin&&tpickpoint(tpickpoint2,1)<TWmax&&tpickpoint(tpickpoint2,1)~=tpickpoint(tpickpoint1,1)
-           if v1(tpickpoint(tpickpoint2,1),tpickpoint(tpickpoint2,2))<v1(tpickpoint(tpickpoint1,1),tpickpoint(tpickpoint1,2))
+            if v1(tpickpoint(tpickpoint2,1),tpickpoint(tpickpoint2,2))<v1(tpickpoint(tpickpoint1,1),tpickpoint(tpickpoint1,2))             
                ffpickpoint(tpickpoint2,:)=0;
            else ffpickpoint(tpickpoint1,:)=0;
            end
@@ -85,7 +113,7 @@ ffpickpoint=ttpickpoint;
  tpickpoint=ffpickpoint;
     [Lpickpoint,Wpickpoint]=find(tpickpoint(:,1)==0);
 tpickpoint(Lpickpoint,:)=[];
-
+fR11(Lpickpoint,4)=255;
 end
 [CLtpickpoint,CWtpickpoint]=size(tpickpoint);
 if CLtpickpoint>3
@@ -153,6 +181,7 @@ fpick2=pickpoint(ifp:length(pickpoint),:);
      end
      [LfR11,WfR11]=find(fR11(:,1)==0);
       fR11(LfR11,:)=[];
+      [R,G,B]=bettersence(R,G,B,fR11,pickpoint);
       
      %%Highlight the color of each energy group
 tya=10;

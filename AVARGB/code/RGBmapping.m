@@ -92,52 +92,56 @@ end
       R11t(itR1t,:)=R1t(tR1t(itR1t,1),:);
   end
   R11=sortrows(R11t,3);
+% r1tt=log10(R11(:,3));
+% r1tts=triangle(ceil(length(r1tt)/5),1,length(r1tt),r1tt);
+% Fxr1tts=gradient(r1tts,1);
+%  
+% Fxr2tts=gradient(Fxr1tts,1);
+% Fxr2tts=Fxr2tts';
+% % save Fxr2tts
+% thr=zeros(1,1);
+% for iFx=2:length(Fxr2tts)
+%     if Fxr2tts(iFx-1,1)*Fxr2tts(iFx,1)<0
+%         thr(iFx,1)=iFx;
+%     end
+% end
+% thr=deletesim(thr);
+% if length(thr)>=2;
+%     thr1=R11(thr(1,1),3);
+%     thr2=R11(thr(length(thr),1),3);
+% elseif length(thr)<2
+%     thr1=R11(thr(1,1),3);
+%     meanthr=mean(abs(Fxr2tts));
+%     for imean=2:length(Fxr2tts)-1
+%     if abs(Fxr2tts(imean-1))<meanthr&&abs(Fxr2tts(imean))>meanthr
+%         break
+%     elseif abs(Fxr2tts(imean-1))>meanthr&&abs(Fxr2tts(imean))<meanthr
+%     break
+%     end
+%     end
+%     thr2=R11(imean,3);
+%     thr=[thr;imean];
+% end
+% % 
 
-r1tt=log10(R11(:,3));
-r1tts=triangle(ceil(length(r1tt)/5),1,length(r1tt),r1tt);
-Fxr1tts=gradient(r1tts,1);
- 
-Fxr2tts=gradient(Fxr1tts,1);
-Fxr2tts=Fxr2tts';
-% save Fxr2tts
-thr=zeros(1,1);
-for iFx=2:length(Fxr2tts)
-    if Fxr2tts(iFx-1,1)*Fxr2tts(iFx,1)<0
-        thr(iFx,1)=iFx;
-    end
-end
-thr=deletesim(thr);
-if length(thr)>=2;
-    thr1=R11(thr(1,1),3);
-    thr2=R11(thr(length(thr),1),3);
-elseif length(thr)<2
-    thr1=R11(thr(1,1),3);
-    meanthr=mean(abs(Fxr2tts));
-    for imean=2:length(Fxr2tts)-1
-    if abs(Fxr2tts(imean-1))<meanthr&&abs(Fxr2tts(imean))>meanthr
-        break
-    elseif abs(Fxr2tts(imean-1))>meanthr&&abs(Fxr2tts(imean))<meanthr
-    break
-    end
-    end
-    thr2=R11(imean,3);
-    thr=[thr;imean];
-end
- thrmix=R11(thr(1,1)+1:thr(length(thr),1)-1,:);  
- [Xthmix,Ythmix]=size(thrmix);
+% %  
+[l,w]=find(R11(:,3)>0);
+R12=R11(l,3);
+% thrmix=R11(thr(1,1)+1:thr(length(thr),1)-1,:);  
+%  [Xthmix,Ythmix]=size(thrmix);
 
- mixmin=abs(floor(log10(thrmix(1,3))));
- mixmax=abs(floor(log10(thrmix(Xthmix,3))));
+ mixmin=abs(floor(log10(min(R12))));
+ mixmax=abs(floor(log10(max(R12))));
  thr3=floor((abs(mixmax-mixmin)+2)/2);
-thrmix1=thr1*10^thr3;
-thrmix2=thr2/10^thr3;
-Rmix=255/3;
- X1=[thr1,thrmix1];
- Y1=[1,Rmix];
+thrmix1=min(R12)*10^thr3;
+thrmix2=max(R12)/10^thr3;
+Rmix=1/3;
+ X1=[min(R12),thrmix1];
+ Y1=[0,Rmix];
  X2=[thrmix1,thrmix2];
  Y2=[Rmix,2*Rmix];
- X3=[thrmix2,thr2];
- Y3=[2*Rmix,255];
+ X3=[thrmix2,max(R12)];
+ Y3=[2*Rmix,1];
 p1= polyfit(X1,Y1,1);
 p2= polyfit(X2,Y2,1); 
 p3= polyfit(X3,Y3,1);
@@ -145,21 +149,22 @@ p3= polyfit(X3,Y3,1);
    for im=1:length(R11)
        if R11(im,1)<=0.4/dt;
            R2=255;
-       elseif R11(im,3)<=thr1
+       elseif R11(im,3)<=min(R12)
            R2=0;
-       elseif R11(im,3)>=thr2;
-           R2=255;
+       elseif R11(im,3)>=max(R12);
+           R2=1;
        else
-           if R11(im,3)<thrmix1&&R11(im,3)>thr1
+           if R11(im,3)<thrmix1&&R11(im,3)>min(R12)
 
                R2=R11(im,3)*p1(:,1)+p1(:,2);
                  
            elseif R11(im,3)<thrmix2&&R11(im,3)>thrmix1
                 R2=R11(im,3)*p2(:,1)+p2(:,2);
-           elseif R11(im,3)<thr2&&R11(im,3)>thrmix2
+           elseif R11(im,3)<max(R12)&&R11(im,3)>thrmix2
                 R2=R11(im,3)*p3(:,1)+p3(:,2);
            end   
        end
+       R2=R2*255;
        R(R11(im,1),R11(im,2))=R2;
    end  
  
@@ -262,27 +267,28 @@ yq=interp1(gX,gY,1:nt,'linear');
     Gx(igx)=vR11(igx)/yq1(tR11(igx));
 end
 
-Gx6=[0.5,1];
-Gy=[0,255];
+% Gx6=[0.5,1];
+ Gx6=[min(Gx),1];
+Gy=[0,1];
 G1=[G1,Gx'];
  G1=sortrows(G1,1); 
 
  pg=polyfit(Gx6,Gy,1);
 for lm=1:length(G1);
     if G1(lm,3)>1
-        G2=255;
-    else if G1(lm,3)<0.5
-            G2=0;
+        G2=1;
+%      else if G1(lm,3)<0.5
+%             G2=0;
         else
     G2=G1(lm,3)*pg(:,1)+pg(:,2);
-        end
+%         end
     end
-    G(G1(lm,1),G1(lm,2))=255-G2;
+    G(G1(lm,1),G1(lm,2))=255-G2*255;
 end
 
 %%Convert amplitude to B-axis coordinates
 
-twindow=floor(0.15/dt);
+twindow=floor(0.1/dt);
 B1=G1(:,1:2);
 [bmax,bmin]=amplitude(v1,twindow);
 for ib=1:nt
@@ -292,14 +298,14 @@ for ib=1:nt
 bmix1(ib)=bmin(ib)*10^bhr;
 bmix2(ib)=bmax(ib)/10^bhr;
 end
-Bmix=255/3;
+Bmix=1/3;
 for ib1=1:length(B1)
  X1=[bmin(B1(ib1,1)),bmix1(B1(ib1,1))];
- Y1=[255,2*Bmix];
+ Y1=[1,2*Bmix];
  X2=[bmix1(B1(ib1,1)),bmix2(B1(ib1,1))];
  Y2=[2*Bmix,Bmix];
  X3=[bmix2(B1(ib1,1)),bmax(B1(ib1,1))];
- Y3=[Bmix,1];
+ Y3=[Bmix,0];
 bpg1= polyfit(X1,Y1,1);
 bpg2= polyfit(X2,Y2,1); 
 bpg3= polyfit(X3,Y3,1);
@@ -310,8 +316,9 @@ elseif bmix1(ib1)<=v1(B1(ib1,1),B1(ib1,2))&&v1(B1(ib1,1),B1(ib1,2))<bmix2(ib1)
 elseif bmix2(ib1)<ms(B1(ib1,1),B1(ib1,2))
      B1(ib1,3)=v1(B1(ib1,1),B1(ib1,2))*bpg3(:,1)+bpg3(:,2);
 end
+B1(ib1,3)=B1(ib1,3).*255;
 B(B1(ib1,1),B1(ib1,2))=B1(ib1,3);
-B1(ib1,4)=v1(B1(ib1,1),B1(ib1,2));
+% B1(ib1,4)=v1(B1(ib1,1),B1(ib1,2));
 end
 
 %%Remove abnormal points
@@ -320,75 +327,79 @@ for ii=1:length(G1);
     G1(ii,4)=R(G1(ii,1),G1(ii,2));
     G1(ii,5)=G(G1(ii,1),G1(ii,2));
     G1(ii,6)=B(G1(ii,1),G1(ii,2));
-    if R(G1(ii,1),G1(ii,2))<150&&G(G1(ii,1),G1(ii,2))<160&&B(G1(ii,1),G1(ii,2))<220;
+%      if R(G1(ii,1),G1(ii,2))<150&&G(G1(ii,1),G1(ii,2))<160&&B(G1(ii,1),G1(ii,2))<220;
    T1(ij,1:2)=G1(ii,1:2);
    ij=ij+1;
     end
-end
+%  end
    T1=sortrows(T1,1);  
 
-[LT1,WT1]=size(T1);
-T2=T1;
-T3=zeros(LT1,1,LT1);
-for iT1=1:LT1
-    TWmin=T1(iT1,1)-0.2/dt;
-    TWmax=T1(iT1,1)+0.2/dt;
-    for IT1=1:LT1   
-        if T1(IT1,1)>=TWmin&&T1(IT1,1)<=TWmax
-            T3(IT1,1,iT1)=ms(T1(IT1,1),T1(IT1,2));
-        end
-    end
-     if ms(T1(iT1,1),T1(iT1,2))==max(T3(:,:,iT1));
-         T2(iT1,:)=0;
-
-     end
-end
-fR1=T1-T2;
-[Lf1,Wf1]=find(fR1(:,1)==0);
-fR1(Lf1,:)=[];
-[LfR1,WfR1]=size(fR1);
-tfR1=zeros(1,2);
-for ifR1=1:LfR1
-    fR1(ifR1,3)=vmin+dv*fR1(ifR1,2);
-      fR1(ifR1,4)=0.02*fR1(ifR1,3);
-end
-
-T2=[T2;tfR1];
-fj2=1;
-tfR2=zeros(1,2);
-for ifR2=1:LfR1
-   if fR1(ifR2,1)>nt-50;
-     tfR2(fj2,:)=fR1(ifR2,1:2);
-            fj2=fj2+1;   
-   end
-end
-
-if tfR2(1,1)>0  
-    T2=[T2;tfR2];
-end
-
-[LT2,WT2]=find(T2(:,1)==0);
-T2(LT2,:)=[]; 
-   T4=T2;
-[LT4,WT4]=size(T4);
-for iT2=1:LT4   
-        R(T4(iT2,1),T4(iT2,2))=255;
-        G(T4(iT2,1),T4(iT2,2))=255;
-        B(T4(iT2,1),T4(iT2,2))=255;
-end
+% [LT1,WT1]=size(T1);
+% T2=T1;
+% T3=zeros(LT1,1,LT1);
+% for iT1=1:LT1
+%     TWmin=T1(iT1,1)-0.2/dt;
+%     TWmax=T1(iT1,1)+0.2/dt;
+%     for IT1=1:LT1   
+%         if T1(IT1,1)>=TWmin&&T1(IT1,1)<=TWmax
+%             T3(IT1,1,iT1)=ms(T1(IT1,1),T1(IT1,2));
+%         end
+%     end
+%      if ms(T1(iT1,1),T1(iT1,2))==max(T3(:,:,iT1));
+%          T2(iT1,:)=0;
+% 
+%      end
+% end
+% fR1=T1-T2;
+% fR1=T1;
+% [Lf1,Wf1]=find(fR1(:,1)==0);
+% fR1(Lf1,:)=[];
+% [LfR1,WfR1]=size(fR1);
+% tfR1=zeros(1,2);
+% for ifR1=1:LfR1
+%     fR1(ifR1,3)=vmin+dv*fR1(ifR1,2);
+%       fR1(ifR1,4)=0.02*fR1(ifR1,3);
+% end
+% 
+% T2=[T2;tfR1];
+% fj2=1;
+% tfR2=zeros(1,2);
+% for ifR2=1:LfR1
+%    if fR1(ifR2,1)>nt-50;
+%      tfR2(fj2,:)=fR1(ifR2,1:2);
+%             fj2=fj2+1;   
+%    end
+% end
+% 
+% if tfR2(1,1)>0  
+%     T2=[T2;tfR2];
+% end
+% 
+% [LT2,WT2]=find(T2(:,1)==0);
+% T2(LT2,:)=[]; 
+%    T4=T2;
+% [LT4,WT4]=size(T4);
+% for iT2=1:LT4   
+%         R(T4(iT2,1),T4(iT2,2))=255;
+%         G(T4(iT2,1),T4(iT2,2))=255;
+%         B(T4(iT2,1),T4(iT2,2))=255;
+% end
 
 fR11=G1;
-if LT4>0
-for iG1=1:length(fR11)
-    for iT4=1:LT4
-        if fR11(iG1,1)==T4(iT4,1)&&fR11(iG1,2)==T4(iT4,2);
-            fR11(iG1,:)=0;
-        end
-    end
-end
-[LG1,WG1]=find(fR11(:,1)==0);
-fR11(LG1,:)=[];
-end
+
+% if LT4>0
+% for iG1=1:length(fR11)
+%     for iT4=1:LT4
+%         if fR11(iG1,1)==T4(iT4,1)&&fR11(iG1,2)==T4(iT4,2);
+%             fR11(iG1,:)=0;
+%         end
+%     end
+% end
+% [LG1,WG1]=find(fR11(:,1)==0);
+% fR11(LG1,:)=[];
+% end
+
+
 for iG2=1:length(fR11)-1
     if abs(fR11(iG2,1)-fR11(iG2+1,1))<maxpick&&abs(fR11(iG2,2)-fR11(iG2+1,2))<maxpick
         fR11(iG2+1,:)=0;
@@ -396,59 +407,48 @@ for iG2=1:length(fR11)-1
 end
 [LG1,WG1]=find(fR11(:,1)==0);
 fR11(LG1,:)=[];
-pickpoint=fR11;
-for ip1=1:length(pickpoint)
-    if R(pickpoint(ip1,1),pickpoint(ip1,2))>=150
-        pickpoint(ip1,:)=0;
-    elseif G(pickpoint(ip1,1),pickpoint(ip1,2))>=200
-         pickpoint(ip1,:)=0;
-     elseif B(pickpoint(ip1,1),pickpoint(ip1,2))>=220
-          pickpoint(ip1,:)=0;
-    elseif pickpoint(ip1,:)<0.4/dt
-        pickpoint(ip1,:)=0;
-    end
-end
-[Lpickpoint,Wpickpoint]=find(pickpoint(:,1)==0);
-pickpoint(Lpickpoint,:)=[];
-fpickpoint=pickpoint(:,1:2);
-fp=1;
- tfpickpoint=zeros(1,2);
-[Lfpickpoint,Wpickpoint]=size(fpickpoint);
-for ifpickpoint=1:Lfpickpoint
-    fpickpoint(ifpickpoint,3)=vmin+dv*fpickpoint(ifpickpoint,2);
-      fpickpoint(ifpickpoint,4)=0.02*fpickpoint(ifpickpoint,3);
-end
-for ifpickpoint=1:Lfpickpoint-1
-    if abs(fpickpoint(ifpickpoint,3)-fpickpoint(ifpickpoint+1,3))<fpickpoint(ifpickpoint,4)
-        if abs(fpickpoint(ifpickpoint,1)-ms(fpickpoint(ifpickpoint+1,1)))<0.15/dt;
-        if ms(fpickpoint(ifpickpoint,1),fpickpoint(ifpickpoint,2))<ms(fpickpoint(ifpickpoint+1,1),fpickpoint(ifpickpoint+1,2))
-            tfpickpoint(fp,:)=fpickpoint(ifpickpoint,1:2);
-            fp=fp+1;
-        else
-            tfpickpoint(fp,:)=fpickpoint(ifpickpoint+1,1:2);
-            fp=fp+1;
-        end
-    end
-end
-[Ltfpickpoint,Wtfpickpoint]=size(tfpickpoint);
-for itfpickpoint=1:Ltfpickpoint
-    if tfpickpoint(itfpickpoint,1)==0
-        continue
-    else
-    R(tfpickpoint(itfpickpoint,1),tfpickpoint(itfpickpoint,2))=255;
-    G(tfpickpoint(itfpickpoint,1),tfpickpoint(itfpickpoint,2))=255;
-    B(tfpickpoint(itfpickpoint,1),tfpickpoint(itfpickpoint,2))=255;
-    end
-end
-for fifR11=1:length(fR11)
-    for itfpickpoint=1:Ltfpickpoint
-        if fR11(fifR11,1)==tfpickpoint(itfpickpoint,1)&&fR11(fifR11,2)==tfpickpoint(itfpickpoint,2);
-            fR11(fifR11,:)=0;
-        end
-    end
-end
-[LG1,WG1]=find(fR11(:,1)==0);
-fR11(LG1,:)=[];
+% pickpoint=fR11;
+% [Lpickpoint,Wpickpoint]=find(pickpoint(:,1)==0);
+% pickpoint(Lpickpoint,:)=[];
+% fpickpoint=pickpoint(:,1:2);
+% fp=1;
+%  tfpickpoint=zeros(1,2);
+% [Lfpickpoint,Wpickpoint]=size(fpickpoint);
+% for ifpickpoint=1:Lfpickpoint
+%     fpickpoint(ifpickpoint,3)=vmin+dv*fpickpoint(ifpickpoint,2);
+%       fpickpoint(ifpickpoint,4)=0.02*fpickpoint(ifpickpoint,3);
+% end
+% for ifpickpoint=1:Lfpickpoint-1
+%     if abs(fpickpoint(ifpickpoint,3)-fpickpoint(ifpickpoint+1,3))<fpickpoint(ifpickpoint,4)
+%         if abs(fpickpoint(ifpickpoint,1)-ms(fpickpoint(ifpickpoint+1,1)))<0.15/dt;
+%         if ms(fpickpoint(ifpickpoint,1),fpickpoint(ifpickpoint,2))<ms(fpickpoint(ifpickpoint+1,1),fpickpoint(ifpickpoint+1,2))
+%             tfpickpoint(fp,:)=fpickpoint(ifpickpoint,1:2);
+%             fp=fp+1;
+%         else
+%             tfpickpoint(fp,:)=fpickpoint(ifpickpoint+1,1:2);
+%             fp=fp+1;
+%         end
+%     end
+% end
+% [Ltfpickpoint,Wtfpickpoint]=size(tfpickpoint);
+% for itfpickpoint=1:Ltfpickpoint
+%     if tfpickpoint(itfpickpoint,1)==0
+%         continue
+%     else
+%     R(tfpickpoint(itfpickpoint,1),tfpickpoint(itfpickpoint,2))=255;
+%     G(tfpickpoint(itfpickpoint,1),tfpickpoint(itfpickpoint,2))=255;
+%     B(tfpickpoint(itfpickpoint,1),tfpickpoint(itfpickpoint,2))=255;
+%     end
+% end
+% for fifR11=1:length(fR11)
+%     for itfpickpoint=1:Ltfpickpoint
+%         if fR11(fifR11,1)==tfpickpoint(itfpickpoint,1)&&fR11(fifR11,2)==tfpickpoint(itfpickpoint,2);
+%             fR11(fifR11,:)=0;
+%         end
+%     end
+% end
+% [LG1,WG1]=find(fR11(:,1)==0);
+% fR11(LG1,:)=[];
 for iffr11=1:length(fR11)
 fR11(iffr11,4)=R(fR11(iffr11,1),fR11(iffr11,2));
 fR11(iffr11,5)=G(fR11(iffr11,1),fR11(iffr11,2));
@@ -460,4 +460,4 @@ for ifR11=1:length(fR11)
 end
 
 end
-                          end
+%                           end

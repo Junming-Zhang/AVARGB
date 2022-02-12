@@ -15,6 +15,9 @@ for ii=1:nt
     if SUM<(1430-vmin)/dv
         SUM=(1430-vmin)/dv;
     end
+    if max(sum(data,1))==0&&ii>1
+        SUM=velpick(ii-1);
+    end
     velpick(ii)=SUM;
 end
 

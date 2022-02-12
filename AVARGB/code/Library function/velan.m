@@ -1,4 +1,4 @@
-  function [S,tau,v] = velan(d,dt,h,vmin,vmax,nv,R,L,fsize);
+  function [S,tau,v] = velan(d,dt,h,vmin,vmax,nv,R,L,fsize)
 %VELAN: A program to compute velocity spectra.
 % 
 %  [S,tau,v] = velan(d,dt,h,vmin,vmav,nv,R,L);
@@ -48,21 +48,18 @@
   nv = length(v);
   tau = (0:R:nt-1)*dt;
   ntau = length(tau);
-  taper = hamming(2*L+1);%汉宁窗函数
+  taper = hamming(2*L+1);
   H = hamming(2*L+1)*ones(nh,1)';
-%   for ih=1:48;
-%       L1(:,ih)=d(:,24);
-%     end; 
-%     L2=local(d,L1);
+
 
   for it = 1:ntau;
   for iv = 1:nv;  
 
-  time = sqrt( tau(it)^2 + (h/v(iv)).^2 );%time为h/v+it*dt的矩阵
+  time = sqrt( tau(it)^2 + (h/v(iv)).^2 );
 
   s = zeros(2*L+1,nh);
 
-  for ig = -L:L;%时窗叠加
+  for ig = -L:L;
   ts = time + (ig-1)*dt;
   
   for ih = 1:nh
@@ -73,7 +70,7 @@
   if i1>=1 & i2<=nt ;
    a = is-i1;
 
-   s(ig+L+1,ih) = [(1.-a)*d(i1,ih) + a*d(i2,ih)];   %Grab sample with Linear interpolation用线性插值抓取样本
+   s(ig+L+1,ih) = [(1.-a)*d(i1,ih) + a*d(i2,ih)];  
   end;
 
   end
@@ -93,8 +90,6 @@
   dif(output)=0;
   S=dif;
  S = S/max(max(S));
-% 
-% S(:,1:30)=0;
-% S(:,nv-20:nv)=0;
+
  return;
     
