@@ -3,7 +3,7 @@ Title of manuscript:Automatic velocity analysis of seismic data containing multi
 Author name: Junming Zhang
 Affiliation:  Jilin University, China
 Address:  Jilin University, People’s Republic of China, China.
-Email address: zhangjm19@mails.jlu.edu.cn
+Email address: junming21@mails.jlu.edu.cn
 
 The MATLAB package contains one main script, four subfunctions, one packet of seismic data and a library function package. The three subfunctions and the library functions are required for the main script.
 The following are the main subroutines and describe the purpose and input/output data of each.
@@ -15,4 +15,4 @@ The following are the main subroutines and describe the purpose and input/output
 The Matlab package contains synthetic seismic data used for testing. In addition, the data packet also contains the reference velocity model of the data for comparison with analysis results. 
 Program language: Matlab
 Software required: Matlab 2014b and above
-Program size: 1.65 MB 
+
